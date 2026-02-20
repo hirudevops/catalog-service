@@ -30,7 +30,7 @@ func corsMiddleware(cfg config.Config) gin.HandlerFunc {
 		MaxAge:           12 * time.Hour,
 		// Sometimes browsers send "null" origin in dev; keep it false by default
 		AllowWildcard: false,
-	}).(gin.HandlerFunc)
+	})
 }
 
 var _ = strings.TrimSpace

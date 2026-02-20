@@ -19,6 +19,7 @@ type Config struct {
 
 	AdminToken       string
 	CacheProductTTL  time.Duration
+	CacheProductListTTL time.Duration
 	CORSAllowOrigins []string
 }
 
@@ -39,6 +40,7 @@ func Load() Config {
 
 		AdminToken:       getEnv("ADMIN_TOKEN", "dev-admin-token"),
 		CacheProductTTL:  getEnvDuration("CACHE_PRODUCT_TTL", 2*time.Minute),
+		CacheProductListTTL: getEnvDuration("CACHE_PRODUCT_LIST_TTL", 2*time.Minute),
 		CORSAllowOrigins: getEnvSlice("CORS_ALLOW_ORIGINS", "http://localhost:3000"),
 	}
 }
