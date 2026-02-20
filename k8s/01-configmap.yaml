@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: catalog-service-config
+  namespace: ecom-app
+data:
+  HTTP_ADDR: "0.0.0.0:8080"
+  APP_ENV: "prod"
+  CORS_ALLOW_ORIGINS: "http://192.168.68.101:3000"
+  REDIS_ADDR: "redis.ecom-app.svc.cluster.local:6379"
