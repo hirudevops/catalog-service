@@ -44,8 +44,9 @@ func (h *catalogHandlers) CreateCategory(c *gin.Context) {
 		return
 	}
 
+	id := uuid.New()
 	err := h.store.CreateCategory(c.Request.Context(), mysqlstore.Category{
-		ID:   uuid.New(),
+		ID:   id,
 		Name: req.Name,
 		Slug: req.Slug,
 	})
@@ -54,7 +55,7 @@ func (h *catalogHandlers) CreateCategory(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"status": "created"})
+	c.JSON(http.StatusCreated, gin.H{"status": "created", "id": id.String()})
 }
 
 type createProductReq struct {
@@ -125,7 +126,24 @@ func (h *catalogHandlers) CreateProduct(c *gin.Context) {
 	// Initialize inventory = 0
 	_ = h.store.UpsertInventory(c.Request.Context(), id, 0)
 
-	c.JSON(http.StatusCreated, gin.H{"id": id.String()})
+	resp := productResp{
+		ID:         id.String(),
+		SKU:        req.SKU,
+		Name:       req.Name,
+		Slug:       req.Slug,
+		PriceCents: req.PriceCents,
+		Currency:   req.Currency,
+		Qty:        0,
+	}
+	if catID != nil {
+		s := catID.String()
+		resp.CategoryID = &s
+	}
+	if img.Valid {
+		resp.ImageURL = &img.String
+	}
+
+	c.JSON(http.StatusCreated, resp)
 }
 
 func (h *catalogHandlers) UpsertInventory(c *gin.Context) {

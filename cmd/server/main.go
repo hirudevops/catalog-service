@@ -5,9 +5,14 @@ import (
 
 	"github.com/hirudevops/catalog-service/internal/config"
 	httpserver "github.com/hirudevops/catalog-service/internal/http"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Printf(".env not loaded: %v", err)
+	}
+
 	cfg := config.MustLoad()
 
 	srv, err := httpserver.New(cfg)
