@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: catalog-service-config
+  namespace: ecom-app
+  labels:
+    app.kubernetes.io/name: catalog-service
+    app.kubernetes.io/part-of: ecom-app
+data:
+  HTTP_ADDR: "0.0.0.0:8080"
+  APP_ENV: "prod"
+  CORS_ALLOW_ORIGINS: "http://192.168.68.101:3000"
+  REDIS_ADDR: "192.168.68.160:6399"
+  REDIS_DB: "0"
+  CACHE_PRODUCT_TTL: "2m"
+  CACHE_PRODUCT_LIST_TTL: "2m"

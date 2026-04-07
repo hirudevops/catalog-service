@@ -30,6 +30,7 @@ func New(cfg config.Config) (*Server, error) {
 
 	catalog := r.Group("/catalog")
 	{
+		catalog.GET("/categories", h.ListCategories)
 		catalog.GET("/products", h.ListProducts)
 		catalog.GET("/products/:id", h.GetProduct)
 	}

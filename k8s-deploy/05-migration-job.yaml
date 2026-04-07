@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: catalog-migrations
+  namespace: ecom-app
+  labels:
+    app.kubernetes.io/name: catalog-service
+    app.kubernetes.io/part-of: ecom-app
+data:
+  001_init.sql: |
+    CREATE TABLE IF NOT EXISTS categories (
+      id           BINARY(16) PRIMARY KEY,
+      name         VARCHAR(120) NOT NULL,
+      slug         VARCHAR(140) NOT NULL UNIQUE,
+      created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB;
+
+    CREATE TABLE IF NOT EXISTS products (
+      id            BINARY(16) PRIMARY KEY,
+      category_id   BINARY(16) NULL,
+      sku           VARCHAR(64) NOT NULL UNIQUE,
+      name          VARCHAR(200) NOT NULL,
+      slug          VARCHAR(220) NOT NULL UNIQUE,
+      description   TEXT NULL,
+      image_url     VARCHAR(500) NULL,
+      price_cents   BIGINT NOT NULL,
+      currency      CHAR(3) NOT NULL DEFAULT 'BDT',
+      is_active     TINYINT(1) NOT NULL DEFAULT 1,
+      created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_products_category (category_id),
+      CONSTRAINT fk_products_category
+        FOREIGN KEY (category_id) REFERENCES categories(id)
+        ON DELETE SET NULL
+    ) ENGINE=InnoDB;
+
+    CREATE TABLE IF NOT EXISTS inventory (
+      product_id   BINARY(16) PRIMARY KEY,
+      qty          BIGINT NOT NULL DEFAULT 0,
+      updated_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      CONSTRAINT fk_inventory_product
+        FOREIGN KEY (product_id) REFERENCES products(id)
+        ON DELETE CASCADE
+    ) ENGINE=InnoDB;
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: catalog-migration
+  namespace: ecom-app
+  labels:
+    app.kubernetes.io/name: catalog-service
+    app.kubernetes.io/part-of: ecom-app
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: mysql:8.0
+          command: ["sh", "-c"]
+          args:
+            - >-
+              mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" < /migrations/001_init.sql
+          env:
+            - name: MYSQL_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: catalog-service-secret
+                  key: MYSQL_HOST
+            - name: MYSQL_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: catalog-service-secret
+                  key: MYSQL_PORT
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: catalog-service-secret
+                  key: MYSQL_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: catalog-service-secret
+                  key: MYSQL_PASSWORD
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: catalog-service-secret
+                  key: MYSQL_DATABASE
+          volumeMounts:
+            - name: migrations
+              mountPath: /migrations
+      volumes:
+        - name: migrations
+          configMap:
+            name: catalog-migrations

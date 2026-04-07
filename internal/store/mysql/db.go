@@ -61,6 +61,15 @@ func (s *Store) CreateCategory(ctx context.Context, c Category) error {
 	return err
 }
 
+func (s *Store) ListCategories(ctx context.Context) ([]Category, error) {
+	out := make([]Category, 0)
+	err := s.DB.SelectContext(ctx, &out, `
+SELECT id, name, slug
+FROM categories
+ORDER BY name ASC`)
+	return out, err
+}
+
 func (s *Store) CreateProduct(ctx context.Context, p Product) error {
 	var cat any = nil
 	if p.CategoryID != nil {

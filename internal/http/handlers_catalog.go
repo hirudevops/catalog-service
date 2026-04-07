@@ -37,6 +37,12 @@ type createCategoryReq struct {
 	Slug string `json:"slug"`
 }
 
+type categoryResp struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+}
+
 func (h *catalogHandlers) CreateCategory(c *gin.Context) {
 	var req createCategoryReq
 	if err := c.ShouldBindJSON(&req); err != nil || req.Name == "" || req.Slug == "" {
@@ -56,6 +62,25 @@ func (h *catalogHandlers) CreateCategory(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"status": "created", "id": id.String()})
+}
+
+func (h *catalogHandlers) ListCategories(c *gin.Context) {
+	items, err := h.store.ListCategories(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	resp := make([]categoryResp, 0, len(items))
+	for _, cat := range items {
+		resp = append(resp, categoryResp{
+			ID:   cat.ID.String(),
+			Name: cat.Name,
+			Slug: cat.Slug,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"items": resp})
 }
 
 type createProductReq struct {
@@ -260,6 +285,10 @@ func (h *catalogHandlers) ListProducts(c *gin.Context) {
 			PriceCents: p.PriceCents,
 			Currency:   p.Currency,
 			Qty:        p.Qty,
+		}
+		if p.CategoryID != nil {
+			s := p.CategoryID.String()
+			r.CategoryID = &s
 		}
 		if p.ImageURL.Valid {
 			r.ImageURL = &p.ImageURL.String

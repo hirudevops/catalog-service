@@ -3,6 +3,9 @@ kind: Service
 metadata:
   name: catalog-service
   namespace: ecom-app
+  labels:
+    app.kubernetes.io/name: catalog-service
+    app.kubernetes.io/part-of: ecom-app
 spec:
   type: NodePort
   selector:
